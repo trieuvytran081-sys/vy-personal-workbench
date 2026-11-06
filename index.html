@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fff8f3">
+  <title>Vy’s Workbench</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --page: #faeee8;
+      --rail: #fffaf6;
+      --card: rgba(255, 252, 249, .88);
+      --card-soft: rgba(255, 249, 245, .7);
+      --ink: #282321;
+      --muted: #938983;
+      --line: #efe5df;
+      --accent: #e78355;
+      --accent-soft: #f8e0d2;
+      --shadow: 0 16px 40px rgba(93, 58, 42, .035);
+      --radius: 23px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; background: var(--page); color: var(--ink); font: 14px/1.5 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    button, input { font: inherit; }
+    button { color: inherit; }
+    .layout { min-height: 100vh; padding: 16px; display: grid; grid-template-columns: 144px minmax(0, 1fr); gap: 32px; }
+    .sidebar { position: sticky; top: 16px; height: calc(100vh - 32px); min-height: 540px; padding: 17px 12px; display: flex; flex-direction: column; border: 1px solid rgba(255,255,255,.68); border-radius: 21px; background: var(--rail); }
+    .brand { padding: 2px 8px 16px; font-size: 13px; font-weight: 750; letter-spacing: -.025em; }
+    .nav-group { display: grid; gap: 4px; }
+    .nav-group + .nav-group { margin-top: 15px; padding-top: 14px; border-top: 1px solid var(--line); }
+    .nav-link { display: flex; align-items: center; gap: 9px; min-height: 35px; padding: 0 8px; color: #716a66; text-decoration: none; border-radius: 10px; font-size: 12px; transition: background .18s, color .18s; }
+    .nav-link:hover, .nav-link.active { background: #fff; color: var(--ink); }
+    .nav-link.active { font-weight: 700; }
+    .nav-link svg { width: 14px; height: 14px; flex: 0 0 14px; stroke: currentColor; stroke-width: 1.7; fill: none; }
+    .nav-link.active svg { color: var(--accent); }
+    .profile-chip { margin-top: auto; display: flex; align-items: center; gap: 8px; padding: 8px 5px 2px; color: #716a66; font-size: 11px; }
+    .avatar { width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%; background: #fff; color: var(--ink); font-weight: 750; }
+    main { width: min(100%, 1120px); margin: 0 auto; padding: 11px 0 48px; }
+    .topline { display: flex; align-items: center; justify-content: space-between; min-height: 28px; color: #746b66; font-size: 11px; }
+    .top-actions { display: flex; gap: 15px; align-items: center; }
+    .text-button { padding: 4px 0; border: 0; background: none; color: inherit; cursor: pointer; font-size: 11px; }
+    .text-button:hover { color: var(--accent); }
+    .hero { min-height: 119px; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 17px 0 14px; }
+    .hero-copy h1 { margin: 0 0 7px; font-size: clamp(31px, 4vw, 43px); line-height: 1.12; letter-spacing: -.055em; font-weight: 720; }
+    .hero-copy p { max-width: 600px; margin: 0; color: #776e68; font-size: 12px; }
+    .greeting-card { width: 210px; min-height: 67px; flex: 0 0 auto; padding: 12px 15px; border: 1px solid rgba(255,255,255,.7); border-radius: 18px; background: rgba(255, 251, 247, .74); }
+    .greeting-card strong { display: block; margin-bottom: 2px; font-size: 15px; letter-spacing: -.025em; }
+    .greeting-card span { color: #827973; font-size: 10px; }
+    .quick-input { position: relative; display: flex; align-items: center; gap: 10px; min-height: 46px; margin: 0 0 43px; padding: 5px 6px 5px 16px; border: 1px solid rgba(255,255,255,.78); border-radius: 16px; background: rgba(255, 251, 247, .83); box-shadow: 0 7px 24px rgba(113,71,49,.025); }
+    .quick-input input { width: 100%; min-width: 0; padding: 5px 0; border: 0; outline: 0; color: var(--ink); background: transparent; font-size: 12px; }
+    .quick-input input::placeholder { color: #89807a; }
+    .quick-input button { width: 33px; height: 33px; flex: 0 0 33px; border: 0; border-radius: 11px; background: var(--accent); color: white; cursor: pointer; font-size: 22px; line-height: 1; transition: transform .18s, background .18s; }
+    .quick-input button:hover { background: #d66f43; transform: translateY(-1px); }
+    .action-menu { position: absolute; top: calc(100% + 8px); right: 4px; z-index: 2; display: none; width: 180px; padding: 6px; border: 1px solid var(--line); border-radius: 14px; background: #fffaf7; box-shadow: 0 16px 36px #54311d1a; }
+    .action-menu.open { display: grid; }
+    .action-menu button { width: 100%; padding: 9px 10px; border: 0; border-radius: 9px; background: transparent; text-align: left; cursor: pointer; font-size: 11px; }
+    .action-menu button:hover, .action-menu button[aria-pressed="true"] { background: #fbefe8; color: #9a5435; }
+    .capture-label { margin-left: 1px; padding: 4px 8px; border-radius: 8px; background: var(--accent-soft); color: #965438; white-space: nowrap; font-size: 10px; }
+    .section { margin-top: 0; scroll-margin-top: 20px; }
+    .section + .section { margin-top: 40px; }
+    .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
+    .section-heading h2 { margin: 0; font-size: 17px; letter-spacing: -.035em; }
+    .section-heading p { margin: 0; color: #a09690; font-size: 10px; }
+    .top-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+    .metric-card { min-height: 172px; padding: 17px 17px 15px; border: 1px solid rgba(255,255,255,.76); border-radius: 20px; background: var(--card); box-shadow: var(--shadow); transition: transform .2s, box-shadow .2s; }
+    .metric-card:hover, .module-card:hover, .entry-card:hover { transform: translateY(-2px); box-shadow: 0 18px 42px rgba(93,58,42,.065); }
+    .metric-label { margin: 0 0 12px; color: #746a65; font-size: 11px; }
+    .metric-value { display: block; min-height: 43px; margin-bottom: 7px; font-size: 17px; line-height: 1.28; letter-spacing: -.025em; font-weight: 710; overflow-wrap: anywhere; }
+    .metric-value small { color: #685e58; font-size: 12px; font-weight: 550; letter-spacing: 0; }
+    .metric-card > p:last-child { margin: 7px 0 0; color: #9b674d; font-size: 10px; }
+    .module-card, .entry-card { border: 1px solid rgba(255,255,255,.76); border-radius: var(--radius); background: var(--card); box-shadow: var(--shadow); transition: transform .2s, box-shadow .2s; }
+    .module-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; gap: 14px; }
+    .module-card { min-height: 198px; padding: 17px 18px; }
+    .module-card.priority { grid-column: span 2; }
+    .module-card h3, .entry-card h3 { margin: 0 0 5px; font-size: 13px; letter-spacing: -.02em; }
+    .module-card > p { margin: 0 0 13px; color: #837972; font-size: 10px; }
+    .item-list { display: grid; }
+    .module-item { display: flex; align-items: center; gap: 9px; min-height: 37px; border-top: 1px solid var(--line); color: #4d4541; font-size: 11px; }
+    .module-item::before { content: ""; width: 7px; height: 7px; flex: 0 0 7px; border-radius: 50%; background: var(--accent); opacity: .88; }
+    .module-item.empty::before { border: 1px solid #c2b8b2; background: transparent; }
+    .module-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .entry-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    .entry-card { min-height: 174px; padding: 17px 18px 13px; }
+    .entry-card h3 { margin-bottom: 5px; }
+    .entry-card > p { margin: 0 0 12px; color: #837972; font-size: 10px; }
+    .entry-list { display: grid; }
+    .entry-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 37px; border-top: 1px solid var(--line); font-size: 11px; }
+    .entry-row span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .entry-row time { flex: 0 0 auto; color: #a09690; font-size: 10px; }
+    .empty-note { min-height: 1px; }
+    .toast { position: fixed; right: 24px; bottom: 22px; z-index: 5; max-width: min(380px, calc(100vw - 32px)); padding: 12px 16px; border: 1px solid #f1e3d9; border-radius: 14px; background: #fffaf6; box-shadow: 0 14px 40px #54311d1a; color: #4b403a; font-size: 12px; opacity: 0; transform: translateY(8px); pointer-events: none; transition: opacity .2s, transform .2s; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .search-panel { position: fixed; inset: 0; z-index: 4; display: none; place-items: start center; padding: 14vh 20px 20px; background: rgba(46,33,27,.16); backdrop-filter: blur(4px); }
+    .search-panel.open { display: grid; }
+    .search-box { width: min(540px, 100%); padding: 12px; border: 1px solid white; border-radius: 20px; background: #fffaf7; box-shadow: 0 24px 70px #3d271c24; }
+    .search-box input { width: 100%; padding: 13px 14px; border: 1px solid var(--line); border-radius: 12px; outline: none; background: white; }
+    .search-results { display: grid; gap: 3px; max-height: 45vh; margin-top: 9px; overflow: auto; }
+    .search-result { width: 100%; padding: 10px 12px; border: 0; border-radius: 10px; background: transparent; color: #554a44; text-align: left; font-size: 12px; cursor: pointer; }
+    .search-result:hover { background: #fbefe8; }
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 126px minmax(0,1fr); gap: 22px; }
+      .top-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .module-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .module-card.priority { grid-column: span 2; }
+      .module-card:last-child { grid-column: span 2; }
+      .entry-grid { grid-template-columns: 1fr; }
+      .entry-card { min-height: initial; }
+    }
+    @media (max-width: 600px) {
+      .layout { display: block; padding: 10px; }
+      .sidebar { position: sticky; z-index: 3; top: 8px; width: 100%; height: auto; min-height: 0; padding: 8px 9px; flex-direction: row; align-items: center; gap: 8px; overflow: auto; border-radius: 16px; box-shadow: 0 8px 26px #63422c0b; }
+      .brand { flex: 0 0 auto; padding: 0 9px 0 3px; white-space: nowrap; }
+      .nav-group { display: flex; gap: 3px; }
+      .nav-group + .nav-group { margin: 0; padding: 0 0 0 7px; border: 0; border-left: 1px solid var(--line); }
+      .nav-link { min-height: 34px; gap: 6px; padding: 0 8px; white-space: nowrap; }
+      .nav-link svg { width: 13px; height: 13px; flex-basis: 13px; }
+      .profile-chip { display: none; }
+      main { padding: 14px 3px 30px; }
+      .hero { align-items: start; padding-top: 18px; }
+      .hero-copy h1 { font-size: 31px; }
+      .hero-copy p { font-size: 11px; }
+      .greeting-card { width: auto; min-width: 115px; padding: 10px; }
+      .greeting-card strong { font-size: 12px; }
+      .greeting-card span { font-size: 9px; }
+      .quick-input { margin-bottom: 32px; }
+      .top-grid { gap: 9px; }
+      .metric-card { min-height: 160px; padding: 14px 13px; border-radius: 17px; }
+      .metric-value { min-height: 42px; font-size: 15px; }
+      .section + .section { margin-top: 32px; }
+      .module-grid { grid-template-columns: 1fr; gap: 9px; }
+      .module-card.priority, .module-card:last-child { grid-column: auto; }
+      .module-card { min-height: 0; padding: 15px; }
+      .entry-grid { gap: 9px; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar" aria-label="Workbench navigation">
+      <div class="brand">My Workbench</div>
+      <nav id="navigation" aria-label="Main navigation"></nav>
+      <div class="profile-chip"><span class="avatar user-avatar">V</span><span id="sidebar-name">Vy</span></div>
+    </aside>
+
+    <main>
+      <div class="topline">
+        <span id="today-label"></span>
+        <div class="top-actions"><button class="text-button" id="search-open" type="button">Search</button><button class="text-button" id="notice-open" type="button">Notifications</button><span class="avatar user-avatar">V</span></div>
+      </div>
+
+      <header class="hero" id="profile">
+        <div class="hero-copy">
+          <h1 id="greeting"></h1>
+          <p id="about"></p>
+        </div>
+      </header>
+
+      <form class="quick-input" id="quick-form">
+        <span class="capture-label" id="capture-label" hidden></span>
+        <input id="quick-text" aria-label="Quick input" placeholder="Choose an action, then write a quick entry…" autocomplete="off">
+        <button type="button" id="action-toggle" aria-label="Choose a quick action" aria-expanded="false">+</button>
+        <div class="action-menu" id="action-menu" role="group" aria-label="Quick actions"></div>
+      </form>
+
+      <section class="section" id="section-top">
+        <div class="section-heading"><h2>My goals</h2><p></p></div>
+        <div class="top-grid" id="top-cards"></div>
+      </section>
+
+      <section class="section" id="section-modules">
+        <div class="section-heading"><h2>Focus areas</h2><p></p></div>
+        <div class="module-grid" id="modules"></div>
+      </section>
+
+      <section class="section" id="section-entries">
+        <div class="section-heading"><h2>Quick entries</h2><p></p></div>
+        <div class="entry-grid" id="entries"></div>
+      </section>
+    </main>
+  </div>
+
+  <div class="search-panel" id="search-panel" role="dialog" aria-modal="true" aria-label="Search workbench">
+    <div class="search-box"><input id="search-input" placeholder="Search your workbench…" autocomplete="off"><div class="search-results" id="search-results"></div></div>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    // Personal details are intentionally limited to the information Vy provided.
+    const workbench = {
+      name: 'Vy',
+      about: 'I am a university student majoring in Business Administration (Marketing). I enjoy learning new things, communicating with people, and exploring creative ideas.',
+      greeting: 'Hey',
+      priorityModule: 'English Learning',
+      cards: [
+        { name: 'Education', value: 'Business Administration – Marketing student', target: 'Graduate with excellent results', note: 'I am improving my business and marketing knowledge.' },
+        { name: 'English', value: 'A2 English level', target: 'B2 English level', note: 'I practice English every day to improve my communication skills.' },
+        { name: 'Personal Growth', value: 'Learning new skills', target: 'Become more confident and independent', note: 'I want to challenge myself and become a better person.' },
+        { name: 'Career', value: 'University student', target: 'Marketing professional', note: 'I hope to build a successful career in marketing.' }
+      ],
+      modules: [
+        { name: 'Education', note: 'I focus on improving my academic knowledge and achieving good grades.', items: ['Attend university classes.', 'Complete assignments on time.', 'Review lessons every week.'] },
+        { name: 'English Learning', note: 'I want to improve my English communication skills and become more confident.', items: ['Learn 10 new words daily.', 'Practice speaking every day.', 'Study English grammar.'] },
+        { name: 'Personal Development', note: 'I want to become more confident, independent, and creative.', items: ['Improve communication skills.', 'Manage my time effectively.', 'Try new experiences.'] }
+      ],
+      navGroups: [
+        { name: 'Main Menu', items: [{ name: 'Dashboard', target: '#section-top' }, { name: 'My Profile', target: '#profile' }, { name: 'Education', target: '#module-education' }, { name: 'English Learning', target: '#module-english-learning' }] },
+        { name: 'Personal', items: [{ name: 'Personal Development', target: '#module-personal-development' }, { name: 'My Goals', target: '#section-top' }, { name: 'Achievements' }, { name: 'Settings' }] }
+      ],
+      entries: [
+        { name: 'Daily To-do List', note: 'I write down my daily tasks to stay organized and productive.' },
+        { name: 'English Vocabulary', note: 'I learn and review new English words every day.' },
+        { name: 'Weekly Goals', note: 'I set small goals every week to improve myself and track my progress.' }
+      ],
+      actions: ['Add a Task', 'Add a Note', 'Set a Goal']
+    };
+    const $ = (selector) => document.querySelector(selector);
+    const escapeHTML = (value) => String(value).replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
+    document.title = `${workbench.name}’s Workbench`;
+    $('#sidebar-name').textContent = workbench.name;
+    document.querySelectorAll('.user-avatar').forEach((avatar) => avatar.textContent = workbench.name.trim().charAt(0).toUpperCase());
+    $('#greeting').textContent = `${workbench.greeting}, ${workbench.name}!`;
+    $('#about').textContent = workbench.about;
+    $('#today-label').textContent = new Intl.DateTimeFormat('en', { weekday: 'long', month: 'long', day: 'numeric' }).format(new Date());
+    $('#top-cards').innerHTML = workbench.cards.map((card) => `
+      <article class="metric-card">
+        <p class="metric-label">${escapeHTML(card.name)}</p>
+        <div class="metric-value"><span>${escapeHTML(card.value)}</span></div>
+        <p>${escapeHTML(card.note)}</p>
+        <p class="metric-target">Goal: ${escapeHTML(card.target)}</p>
+      </article>`).join('');
+    $('#modules').innerHTML = workbench.modules.map((module) => `
+      <article class="module-card${module.name === workbench.priorityModule ? ' priority' : ''}" id="module-${escapeHTML(module.name.toLowerCase().replace(/\s+/g, '-'))}">
+        <h3>${escapeHTML(module.name)}</h3><p>${escapeHTML(module.note)}</p>
+        <div class="item-list">${module.items.map((item) => `<div class="module-item"><span>${escapeHTML(item)}</span></div>`).join('')}</div>
+      </article>`).join('');
+    $('#navigation').innerHTML = workbench.navGroups.map((group) => `
+      <div class="nav-group" aria-label="${escapeHTML(group.name)}">
+        ${group.items.map((item, index) => `<a class="nav-link${group.name === 'Main Menu' && index === 0 ? ' active' : ''}" href="${escapeHTML(item.target || '#')}" ${item.target ? `data-target="${escapeHTML(item.target)}"` : 'data-empty="true"'}><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><path d="M9 12h6M12 9v6"/></svg><span>${escapeHTML(item.name)}</span></a>`).join('')}
+      </div>`).join('');
+    document.querySelectorAll('.nav-link').forEach((link) => link.addEventListener('click', (event) => {
+      event.preventDefault();
+      document.querySelectorAll('.nav-link').forEach((node) => node.classList.remove('active'));
+      link.classList.add('active');
+      const target = link.dataset.target && $(link.dataset.target);
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      else toast('Nothing added here yet.');
+    }));
+    $('#entries').innerHTML = workbench.entries.map((entry) => `
+      <article class="entry-card"><h3>${escapeHTML(entry.name)}</h3><p>${escapeHTML(entry.note)}</p></article>`).join('');
+
+    const toast = (message) => {
+      const el = $('#toast'); el.textContent = message; el.classList.add('show');
+      clearTimeout(toast.timer); toast.timer = setTimeout(() => el.classList.remove('show'), 2400);
+    };
+    $('#notice-open').addEventListener('click', () => toast('You’re all caught up.'));
+    let activeAction = '';
+    const actionMenu = $('#action-menu');
+    actionMenu.innerHTML = workbench.actions.map((action) => `<button type="button" data-action="${escapeHTML(action)}" aria-pressed="false">${escapeHTML(action)}</button>`).join('');
+    $('#action-toggle').addEventListener('click', () => {
+      const open = actionMenu.classList.toggle('open');
+      $('#action-toggle').setAttribute('aria-expanded', String(open));
+    });
+    actionMenu.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-action]'); if (!button) return;
+      activeAction = button.dataset.action;
+      actionMenu.querySelectorAll('[data-action]').forEach((item) => item.setAttribute('aria-pressed', String(item === button)));
+      $('#capture-label').hidden = false; $('#capture-label').textContent = activeAction;
+      $('#quick-text').placeholder = `Write something for ${activeAction.toLowerCase()}…`;
+      actionMenu.classList.remove('open'); $('#action-toggle').setAttribute('aria-expanded', 'false'); $('#quick-text').focus();
+    });
+    $('#quick-form').addEventListener('submit', (event) => {
+      event.preventDefault(); const input = $('#quick-text'); const value = input.value.trim();
+      if (!activeAction) { actionMenu.classList.add('open'); $('#action-toggle').setAttribute('aria-expanded', 'true'); toast('Choose an action first.'); return; }
+      if (!value) { input.focus(); return; }
+      const entry = document.createElement('article'); entry.className = 'entry-card';
+      const title = document.createElement('h3'); title.textContent = activeAction;
+      const note = document.createElement('p'); note.textContent = value;
+      entry.append(title, note); $('#entries').prepend(entry);
+      toast('Added to this session.'); input.value = ''; activeAction = '';
+      $('#capture-label').hidden = true; $('#quick-text').placeholder = 'Choose an action, then write a quick entry…';
+      actionMenu.querySelectorAll('[data-action]').forEach((item) => item.setAttribute('aria-pressed', 'false'));
+    });
+    document.addEventListener('click', (event) => {
+      if (!event.target.closest('#quick-form') && actionMenu.classList.contains('open')) {
+        actionMenu.classList.remove('open'); $('#action-toggle').setAttribute('aria-expanded', 'false');
+      }
+    });
+    const panel = $('#search-panel');
+    const openSearch = () => { panel.classList.add('open'); $('#search-input').focus(); };
+    const closeSearch = () => panel.classList.remove('open');
+    $('#search-open').addEventListener('click', openSearch);
+    panel.addEventListener('click', (event) => { if (event.target === panel) closeSearch(); });
+    document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeSearch(); if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); openSearch(); } });
+    const searchableCards = () => [...document.querySelectorAll('.metric-card, .module-card, .entry-card')];
+    $('#search-input').addEventListener('input', (event) => {
+      const query = event.target.value.trim().toLowerCase(); const results = $('#search-results');
+      const matches = query ? searchableCards().filter((card) => card.textContent.toLowerCase().includes(query)) : [];
+      results.replaceChildren(...matches.map((card) => {
+        const button = document.createElement('button'); button.type = 'button'; button.className = 'search-result';
+        button.textContent = card.querySelector('h3, .metric-label')?.textContent || card.textContent.trim();
+        button.addEventListener('click', () => { card.scrollIntoView({ behavior: 'smooth', block: 'center' }); closeSearch(); });
+        return button;
+      }));
+    });
+  </script>
+</body>
+</html>
